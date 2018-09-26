@@ -6,7 +6,7 @@ app:
         - 'session'
   pythonpath: '..'
   #type: 'tornado'
-  port: 8888
+  port: 9999
 
 data:
   sources:
