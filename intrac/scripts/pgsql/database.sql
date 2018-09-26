@@ -1,0 +1,12 @@
+-- Intrac database
+
+DROP DATABASE IF EXISTS intrac;
+
+CREATE DATABASE intrac WITH
+    OWNER = intracusr
+    TEMPLATE = template0
+    ENCODING = 'UTF-8';
+
+GRANT ALL ON DATABASE intrac TO <INTRAC_USER>;
+
+ALTER SCHEMA public OWNER TO <INTRAC_USER>;
