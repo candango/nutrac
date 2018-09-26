@@ -21,9 +21,16 @@ import trac.web.main
 
 
 def application(environ, start_response, component, handler, request):
-    #print(environ)
+    trac_root = component.conf['trac']['root']
+    project_relative = "/".join(request.uri.split("/")[1:3])
+    project_path = os.path.join(trac_root, project_relative)
+    os.environ['TRAC_ENV'] = project_path
+    environ['PATH_INFO'] = environ['PATH_INFO'].replace("/%s" %
+                                                        project_relative, "")
+    environ['SCRIPT_NAME'] = "/%s/" % project_relative
+    environ['REMOTE_USER'] = "buga"
+
     request.application = component.application
-    print(handler.session.get("abc"))
     #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
     #environ['trac.base_path'] = 'candango'
     #if 'HTTP_AUTHORIZATION' in environ:
@@ -31,6 +38,7 @@ def application(environ, start_response, component, handler, request):
         #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
     #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
     return trac.web.main.dispatch_request(environ, start_response)
+
 
 
 
@@ -112,3 +120,6 @@ class IntracComponent(tornadoweb.TornadoComponent):
             (r"/([\w|\-|\_|\@|]*)/.*", ComponentizedFallbackHandler,
              dict(component=self, fallback=container))
         ]
+
+    def get_config_filename(self):
+        return "intrac"
