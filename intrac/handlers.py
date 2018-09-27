@@ -4,7 +4,7 @@ from firenado import tornadoweb
 class IndexHandler(tornadoweb.TornadoHandler):
 
     def get(self):
-        self.write("IndexHandler output")
+        self.render("index.html")
 
 
 class ProfileHandler(tornadoweb.TornadoHandler):
@@ -13,7 +13,7 @@ class ProfileHandler(tornadoweb.TornadoHandler):
         self.write("Profile output")
 
 
-class ProjectsHandler(tornadoweb.TornadoHandler):
+class HomeHandler(tornadoweb.TornadoHandler):
 
     def get(self, user):
-        self.write("Projects output %s" % user)
+        self.write("Home output %s" % user)

@@ -26,20 +26,25 @@ def application(environ, start_response, component, handler, request):
     project_path = os.path.join(trac_root, project_relative)
     os.environ['TRAC_ENV'] = project_path
     environ['PATH_INFO'] = environ['PATH_INFO'].replace("/%s" %
+
                                                         project_relative, "")
-    environ['SCRIPT_NAME'] = "/%s/" % project_relative
-    environ['REMOTE_USER'] = "buga"
+    if component.project_exists(project_relative):
+        environ['SCRIPT_NAME'] = "/%s/" % project_relative
+        environ['REMOTE_USER'] = "buga"
 
-    request.application = component.application
-    #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
-    #environ['trac.base_path'] = 'candango'
-    #if 'HTTP_AUTHORIZATION' in environ:
-        #auth_header = environ['HTTP_AUTHORIZATION']
-        #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
-    #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
-    return trac.web.main.dispatch_request(environ, start_response)
-
-
+        request.application = component.application
+        #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
+        #environ['trac.base_path'] = 'candango'
+        #if 'HTTP_AUTHORIZATION' in environ:
+            #auth_header = environ['HTTP_AUTHORIZATION']
+            #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
+        #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
+        return trac.web.main.dispatch_request(environ, start_response)
+    else:
+        status = "404 Not Found"
+        response_headers = [("Content-type", "text/plain")]
+        start_response(status, response_headers)
+        return ["File not found"]
 
 
 class ComponentizedWSGIContainer(tornado.wsgi.WSGIContainer):
@@ -116,10 +121,17 @@ class IntracComponent(tornadoweb.TornadoComponent):
         return [
             (r"/", handlers.IndexHandler),
             (r"/profile", handlers.ProfileHandler),
-            (r"/([\w|\-|\_|\@|]*\/?)", handlers.ProjectsHandler),
+            (r"/login", handlers.ProfileHandler),
+            (r"/([\w|\-|\_|\@|]*\/?)", handlers.HomeHandler),
             (r"/([\w|\-|\_|\@|]*)/.*", ComponentizedFallbackHandler,
              dict(component=self, fallback=container))
         ]
 
     def get_config_filename(self):
         return "intrac"
+
+    def project_exists(self, trac_relative):
+        trac_path = os.path.join(self.conf['trac']['root'], trac_relative)
+        if os.path.exists(trac_path):
+            return True
+        return False
