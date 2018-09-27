@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../../../favicon.ico">
+
+    <title>NuTrac{% block title %}{% end %}</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/nutrac.css" rel="stylesheet">
+</head>
+
+<body>
+    {% include "header.html" %}
+
+    <main role="main" class="container">
+    {% block content %}{% end %}
+    </main><!-- /.container -->
+
+    {% include "footer.html" %}
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/static/node_modules/jquery/dist/jquery.slim.min.js"></script>
+    <script src="/static/node_modules/popper.js/dist/umd/popper.min.js"></script>
+    <script src="/static/node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
