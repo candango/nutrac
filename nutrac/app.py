@@ -114,7 +114,7 @@ class ComponentizedFallbackHandler(tornado.web.FallbackHandler):
         # self.component.run_after_handler(self)
 
 
-class IntracComponent(tornadoweb.TornadoComponent):
+class NutracComponent(tornadoweb.TornadoComponent):
 
     def get_handlers(self):
         container = ComponentizedWSGIContainer(application, self)
@@ -128,7 +128,7 @@ class IntracComponent(tornadoweb.TornadoComponent):
         ]
 
     def get_config_filename(self):
-        return "intrac"
+        return "nutrac"
 
     def project_exists(self, trac_relative):
         trac_path = os.path.join(self.conf['trac']['root'], trac_relative)

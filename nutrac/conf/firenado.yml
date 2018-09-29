@@ -1,5 +1,5 @@
 app:
-  component: 'intrac'
+  component: 'nutrac'
   data:
     sources:
         # Set here references from sources defined on data.sources
@@ -16,8 +16,8 @@ data:
       # port: 6379
       # db: 0
 components:
-  - id: intrac
-    class: intrac.app.IntracComponent
+  - id: nutrac
+    class: nutrac.app.NutracComponent
     enabled: true
   #- id: admin
   #  enabled: true
