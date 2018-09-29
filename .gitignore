@@ -47,3 +47,6 @@ nosetests.xml
 
 # Project
 intrac.yml
+
+#NodeJs
+node_modules

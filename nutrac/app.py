@@ -30,7 +30,7 @@ def application(environ, start_response, component, handler, request):
                                                         project_relative, "")
     if component.project_exists(project_relative):
         environ['SCRIPT_NAME'] = "/%s/" % project_relative
-        environ['REMOTE_USER'] = "buga"
+        #environ['REMOTE_USER'] = "buga"
 
         request.application = component.application
         #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
