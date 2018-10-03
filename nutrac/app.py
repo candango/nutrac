@@ -29,6 +29,8 @@ class NutracComponent(tornadoweb.TornadoComponent):
             (r"/profile", handlers.ProfileHandler),
             (r"/login", handlers.ProfileHandler),
             (r"/([\w|\-|\_|\@|]*\/?)", handlers.HomeHandler),
+            (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/login",
+             handlers.LoginHandler),
             (r"/([\w|\-|\_|\@|]*)/.*", wsgi.ComponentizedFallbackHandler,
              dict(component=self, fallback=container))
         ]
