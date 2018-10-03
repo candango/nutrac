@@ -3,7 +3,7 @@
 DROP DATABASE IF EXISTS intrac;
 
 CREATE DATABASE intrac WITH
-    OWNER = intracusr
+    OWNER = <INTRAC_USER>
     TEMPLATE = template0
     ENCODING = 'UTF-8';
 
