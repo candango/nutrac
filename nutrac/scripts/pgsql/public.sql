@@ -1,19 +1,19 @@
 -- Creating default schema
 
-GRANT ALL ON SCHEMA public TO <INTRAC_USER>;
+GRANT ALL ON SCHEMA public TO <NUTRAC_USER>;
 
 -- ## SEQUENCES ##
 
-CREATE SEQUENCE iuser_id_seq;
-GRANT ALL ON SEQUENCE auser_id_seq TO <INTRAC_USER>;
+CREATE SEQUENCE nuser_id_seq;
+GRANT ALL ON SEQUENCE nuser_id_seq TO <NUTRAC_USER>;
 
 
 -- ## User table ##
 -- Added the i before as user is a reserved word in postgres.
-CREATE TABLE iuser (
+CREATE TABLE nuser (
     id                          BIGINT NOT NULL DEFAULT
-        nextval('iuser_id_seq'::regclass),
-    uuid                        UUID NOT NULL DEFAULT gen_random_uuid(),
+        nextval('nuser_id_seq'::regclass),
+    uuid                        UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
     username                    CHARACTER VARYING(100) NOT NULL,
     password                    CHARACTER VARYING(255) NOT NULL,
     email                       CHARACTER VARYING(255),
@@ -42,7 +42,7 @@ CREATE TABLE iuser (
     CONSTRAINT iuser_email_idx UNIQUE (email)
 );
 
-GRANT ALL ON TABLE iuser_id_seq TO <INTRAC_USER>;
+GRANT ALL ON TABLE nuser TO <NUTRAC_USER>;
 
 
 -- ## Profile table ##
@@ -69,8 +69,8 @@ CREATE TABLE profile (
     deleted_at                  TIMESTAMP with time zone,
     CONSTRAINT profile_pk PRIMARY KEY (user_id),
     CONSTRAINT profile_user_id_fk FOREIGN KEY(user_id)
-        REFERENCES auser(id) MATCH SIMPLE
+        REFERENCES nuser(id) MATCH SIMPLE
         ON UPDATE RESTRICT ON DELETE RESTRICT
 );
 
-GRANT ALL ON TABLE profile TO <INTRAC_USER>;
+GRANT ALL ON TABLE profile TO <NUTRAC_USER>;
