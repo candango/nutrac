@@ -2,6 +2,6 @@ nutrac <sub-command>
 
 Sub-commands are:
 
-      install        Install the application (i.e. database, paths, configurations, etc.)
-      list           List nutrac or trac objects
-      create         Crate nutrac or trac objects
+{% for subcommand in subcommands %}
+      {{ subcommand.name }}       {{ subcommand.description }}
+{% end %}
