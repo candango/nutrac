@@ -23,16 +23,12 @@ NUTRAC_ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 
 loader = template.Loader(os.path.join(NUTRAC_ROOT, "templates", "management"))
 
+nutracSubcommands = [
+    ManagementCommand("createdb", "Create NuTrac database", "",
+                      tasks=tasks.NutacCreateDatabaseTask),
+]
 
-ManagementCommand(
-    "nutrac", "Application related commands",
-    loader.load("nutrac_command_help.txt"), category="Nutrac",
-    sub_commands=[
-        ManagementCommand("install", "Install a Firenado application", "",
-                          tasks=tasks.InstallProjectTask),
-        ManagementCommand("run", "Runs a Firenado application", "",
-                          tasks=tasks.RunApplicationTask),
-        ManagementCommand("cookie_secret_gen",
-                          "Generates a random cookie secret", "",
-                          tasks=tasks.GenerateCookieSecretTask),
-    ])
+ManagementCommand("nutrac", "Application related commands", loader.load(
+    "nutrac_command_help.txt").generate(
+    subcommands=nutracSubcommands), category="Nutrac",
+                  sub_commands=nutracSubcommands)
