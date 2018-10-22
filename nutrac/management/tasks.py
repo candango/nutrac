@@ -1,8 +1,10 @@
 from firenado.management import ManagementTask
-from firenado.util import file as _file, sqlalchemy_util
+from firenado.util import file as _file
+from firenado.util.sqlalchemy_util import Session, run_script
 import logging
 import os
 from six import moves
+from sqlalchemy import create_engine
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,22 @@ class NutacCreateDatabaseTask(ManagementTask):
         else:
             password = namespace.password
         print(namespace)
-        exit(2)
+
+        conn_string = "%s://%s:%s@%s:%s/%s" % (
+            "postgresql+psycopg2",
+            namespace.user,
+            namespace.password,
+            namespace.host,
+            namespace.port,
+            namespace.database
+        )
+
+        engine = create_engine(conn_string)
+
+        engine.connect()
+
+        Session.configure(bind=engine)
+        session = Session()
 
         db_script_path = os.path.realpath(
             os.path.join(
@@ -36,8 +53,11 @@ class NutacCreateDatabaseTask(ManagementTask):
                 "public.sql"
             )
         )
-        public_script_path = _file.read(db_script_path).replace(
-            "<INTRAC_USER>", "intracuser")
-        sqlalchemy_util.run_script(public_script_path)
+
+        def fix_command(sql_command):
+            return sql_command.replace("<NUTRAC_USER>", namespace.user)
+
+        run_script(db_script_path, session, handle_command=fix_command)
+
 
         logger.info("Creating the NuTrac database.")
