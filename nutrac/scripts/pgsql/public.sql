@@ -4,6 +4,10 @@ GRANT ALL ON SCHEMA public TO <NUTRAC_USER>;
 
 -- ## SEQUENCES ##
 
+DROP TABLE IF EXISTS profile;
+DROP TABLE IF EXISTS nuser;
+DROP SEQUENCE IF EXISTS nuser_id_seq;
+
 CREATE SEQUENCE nuser_id_seq;
 GRANT ALL ON SEQUENCE nuser_id_seq TO <NUTRAC_USER>;
 
@@ -13,7 +17,7 @@ GRANT ALL ON SEQUENCE nuser_id_seq TO <NUTRAC_USER>;
 CREATE TABLE nuser (
     id                          BIGINT NOT NULL DEFAULT
         nextval('nuser_id_seq'::regclass),
-    uuid                        UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
+    uuid                        UUID NOT NULL,
     username                    CHARACTER VARYING(100) NOT NULL,
     password                    CHARACTER VARYING(255) NOT NULL,
     email                       CHARACTER VARYING(255),
