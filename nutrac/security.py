@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 # TODO: Private key methods belong to podship_platform project
 def generate_private_key():
     """ FROM pyraspora: pyaspora.user.models
@@ -28,4 +29,3 @@ def generate_private_key():
         format='PEM',
         pkcs=1
     ).decode("ascii")
-

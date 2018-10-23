@@ -16,6 +16,7 @@
 
 from ..models import UserBase
 from ..security import generate_private_key
+from passlib.hash import bcrypt
 from firenado.management import ManagementTask
 from firenado.util.sqlalchemy_util import Session, run_script
 import logging
@@ -81,7 +82,11 @@ class NutacCreateDatabaseTask(ManagementTask):
         user = UserBase()
         user.uuid = str(uuid.uuid5(uuid.NAMESPACE_URL, "http://localhost"))
         user.username = "nutracmin"
-        user.password = "nutracpass"
+        user.password = bcrypt.encrypt("nutracpass")
         user.private_key = generate_private_key()
+
+        session.add(user)
+        session.commit()
+        session.close()
 
         logger.info("Creating the NuTrac database.")

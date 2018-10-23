@@ -50,8 +50,10 @@ class UserBase(Base):
     enabled = Column("enabled", Boolean, DefaultClause('True'), nullable=False)
     deleted = Column("deleted", Boolean, DefaultClause('False'),
                      nullable=False)
-    created_at = Column('created_at', TIMESTAMP(), nullable=False)
-    modified_at = Column('modified_at', TIMESTAMP(), nullable=False)
+    created_at = Column('created_at', TIMESTAMP(),
+                        DefaultClause('CURRENT_TIMESTAMP'), nullable=False)
+    modified_at = Column('modified_at', TIMESTAMP(),
+                         DefaultClause('CURRENT_TIMESTAMP'), nullable=False)
     deleted_at = Column('deleted_at', TIMESTAMP(), nullable=True)
     reset_password_sent_at = Column('reset_password_sent_at', TIMESTAMP(),
                                     nullable=True)
