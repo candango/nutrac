@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2015-2018 Flavio Garcia
+# Copyright 2018 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ def application(environ, start_response, component, handler, request):
 
 
         environ['SCRIPT_NAME'] = "/%s/" % project_relative
-        environ['REMOTE_USER'] = "buga"
 
         request.application = component.application
         #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
