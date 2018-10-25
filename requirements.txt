@@ -4,4 +4,4 @@ trac==1.2.3
 passlib==1.7.1
 pexpect==4.6.0
 pycryptodome==3.6.6
-psycopg2==2.7.5
+psycopg2-binary==2.7.5
