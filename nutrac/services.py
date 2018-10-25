@@ -36,7 +36,7 @@ class LoginService(service.FirenadoService):
 class UserService(service.FirenadoService):
 
     def by_username(self, username):
-        db_session = self.get_data_source("nutrac").sesssion
+        db_session = self.get_data_source("nutrac").session
         user = db_session.query(UserBase).filter(
             UserBase.username == username.lower()).one_or_none()
         db_session.close()

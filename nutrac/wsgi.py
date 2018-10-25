@@ -17,47 +17,68 @@
 from __future__ import (absolute_import, division, print_function,
                         with_statement)
 
-from firenado import session
-from tornado import escape
-from tornado import httputil
+from firenado import service, session
+from firenado.data import DataConnectedMixin
+from tornado import escape, httputil
 import tornado.wsgi
 import os
 import trac.web.main
 import pexpect
 
 
-def application(environ, start_response, component, handler, request):
-    trac_root = component.conf['trac']['root']
-    project_relative = "/".join(request.uri.split("/")[1:3])
-    project_path = os.path.join(trac_root, project_relative)
-    os.environ['TRAC_ENV'] = project_path
-    environ['PATH_INFO'] = environ['PATH_INFO'].replace("/%s" %
-                                                        project_relative, "")
-    print(project_relative)
+class NutracWsgiApplication(DataConnectedMixin):
 
-    if component.project_exists(project_relative):
-        command = "trac-admin %s  config get header_logo src" % (project_path)
-        print(command)
-        child = pexpect.spawn(command)
-        child.expect(pexpect.EOF)
-        print(child.before)
+    def __init__(self, component):
+        """
 
+        :param nutrac.app.NutracComponent component:
+        """
+        self.data_connected = component.application
 
-        environ['SCRIPT_NAME'] = "/%s/" % project_relative
+    @service.served_by("nutrac.services.UserService")
+    def process(self, environ, start_response, component, handler, request):
+        #user = self.user_service.by_username("nutracmin")
+        user = None
+        trac_root = component.conf['trac']['root']
+        project_relative = "/".join(request.uri.split("/")[1:3])
+        project_path = os.path.join(trac_root, project_relative)
+        os.environ['TRAC_ENV'] = project_path
+        environ['PATH_INFO'] = environ['PATH_INFO'].replace(
+            "/%s" % project_relative, "")
+        if user:
+            environ['REMOTE_USER'] = user.username
+        else:
+            environ['REMOTE_USER'] = "anonymous"
+        print(project_relative)
 
-        request.application = component.application
-        #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
-        #environ['trac.base_path'] = 'candango'
-        #if 'HTTP_AUTHORIZATION' in environ:
-            #auth_header = environ['HTTP_AUTHORIZATION']
-            #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
-        #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
-        return trac.web.main.dispatch_request(environ, start_response)
-    else:
-        status = "404 Not Found"
-        response_headers = [("Content-type", "text/plain")]
-        start_response(status, response_headers)
-        return ["File not found"]
+        if component.project_exists(project_relative):
+            if user:
+                if user.email:
+                    command = "trac-admin %s session set email %s %s" % (
+                        project_path, user.username, user.email)
+                else:
+                    command = "trac-admin %s session set email %s \"\" " % (
+                        project_path, user.username)
+                print(command)
+                child = pexpect.spawn(command)
+                child.expect(pexpect.EOF)
+                print(child.before)
+
+            environ['SCRIPT_NAME'] = "/%s/" % project_relative
+
+            request.application = component.application
+            #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
+            #environ['trac.base_path'] = 'candango'
+            #if 'HTTP_AUTHORIZATION' in environ:
+                #auth_header = environ['HTTP_AUTHORIZATION']
+                #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
+            #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
+            return trac.web.main.dispatch_request(environ, start_response)
+        else:
+            status = "404 Not Found"
+            response_headers = [("Content-type", "text/plain")]
+            start_response(status, response_headers)
+            return ["File not found"]
 
 
 class ComponentizedFallbackHandler(tornado.web.FallbackHandler):

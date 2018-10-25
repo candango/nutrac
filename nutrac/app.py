@@ -22,12 +22,18 @@ import os
 
 class NutracComponent(tornadoweb.TornadoComponent):
 
+    def __init__(self, name, application):
+        super(NutracComponent, self).__init__(name, application)
+        self.wsgi_application = wsgi.NutracWsgiApplication(self)
+
     def get_handlers(self):
-        container = wsgi.ComponentizedWSGIContainer(wsgi.application, self)
+        container = wsgi.ComponentizedWSGIContainer(
+            self.wsgi_application.process, self
+        )
         return [
             (r"/", handlers.IndexHandler),
             (r"/profile", handlers.ProfileHandler),
-            (r"/login", handlers.ProfileHandler),
+            (r"/login", handlers.LoginHandler),
             (r"/([\w|\-|\_|\@|]*\/?)", handlers.HomeHandler),
             (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/login",
              handlers.LoginHandler),
