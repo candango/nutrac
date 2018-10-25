@@ -46,7 +46,8 @@ nosetests.xml
 .pydevproject
 
 # Project
-intrac.yml
+firenado.yml
+nutrac.yml
 
 #NodeJs
 node_modules

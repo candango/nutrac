@@ -1,2 +1,4 @@
+password:
+  pepper: "--add-pepper-here--"
 trac:
-  root: ""
+  root: "--place-trac-repositories-root--"

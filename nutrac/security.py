@@ -14,28 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from firenado import tornadoweb
 
-
-class IndexHandler(tornadoweb.TornadoHandler):
-
-    def get(self):
-        self.render("index.html")
-
-
-class ProfileHandler(tornadoweb.TornadoHandler):
-
-    def get(self):
-        self.write("Profile output")
-
-
-class LoginHandler(tornadoweb.TornadoHandler):
-
-    def get(self, repository_path=None):
-        self.render("login.html")
-
-
-class HomeHandler(tornadoweb.TornadoHandler):
-
-    def get(self, user):
-        self.write("Home output %s" % user)
+# TODO: Private key methods belong to podship_platform project
+def generate_private_key():
+    """ FROM pyraspora: pyaspora.user.models
+    Generate a 4096-bit RSA key. The key will be stored in the User
+    object. The private key will be protected with password <passphrase>,
+    which is usually the user password.
+    """
+    # TODO: seems to be candidate as part of some security toolkit
+    from Crypto.PublicKey import RSA
+    RSAkey = RSA.generate(4096)
+    return RSAkey.exportKey(
+        format='PEM',
+        pkcs=1
+    ).decode("ascii")

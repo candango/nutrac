@@ -19,13 +19,13 @@ try: # for pip >= 10
     from pip._internal.req import parse_requirements
 except ImportError: # for pip <= 9.0.3
     from pip.req import parse_requirements
-import firenado
+
 import os
 
 # Solution from http://bit.ly/29Yl8VN
 def resolve_requires(requirements_file):
-    requirements = parse_requirements("./%s" % requirements_file,
-            session=False)
+    requirements = parse_requirements(os.path.join(
+        os.path.dirname(__file__), requirements_file), session=False)
     return [str(ir.req) for ir in requirements]
 
 # Utility function to read the README file.
@@ -40,8 +40,8 @@ def read(fname):
 # Twine isn't handling long_descriptions as per:
 # https://github.com/pypa/twine/issues/262
 setup(
-    name="intrac",
-    version=".".join(map(str,firenado.__version__)),
+    name="Nutrac",
+    version="0.1",
     description="Intrac is a trac multi-project and login manager.",
     long_description=read('README.rst'),
     license="Apache License V2.0",
@@ -50,9 +50,9 @@ setup(
     maintainer="Flavio Garcia",
     maintainer_email="piraz@candango.org",
     install_requires=resolve_requires("requirements.txt"),
-    url="https://github.com/candango/intrac",
+    url="https://github.com/candango/nutrac",
     packages=find_packages(),
-    package_dir={'intrac': "intrac"},
+    package_dir={'nutrac': "nutrac"},
     include_package_data=True,
     classifiers=[
         "Development Status :: 5 - Production/Stable",
