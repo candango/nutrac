@@ -27,8 +27,8 @@ class NutracComponent(tornadoweb.TornadoComponent):
         self.wsgi_application = wsgi.NutracWsgiApplication(self)
 
     def get_handlers(self):
-        container = wsgi.ComponentizedWSGIContainer(
-            self.wsgi_application.process, self
+        container = wsgi.ContextualizedWSGIContainer(
+            self.wsgi_application.process
         )
         return [
             (r"/", handlers.IndexHandler),
