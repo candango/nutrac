@@ -937,7 +937,7 @@ can-ajax@^1.0.0:
     can-parse-uri "^1.0.0"
     can-reflect "^1.4.5"
 
-can-ajax@^2.0.1:
+can-ajax@^2.0.1, can-ajax@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/can-ajax/-/can-ajax-2.1.1.tgz#e5dece6576ddf98ef0fb039800fa44493ab3ac6e"
   dependencies:

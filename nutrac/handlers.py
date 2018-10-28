@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import forms
 from firenado import tornadoweb
+from tornado import escape
 
 
 class IndexHandler(tornadoweb.TornadoHandler):
@@ -33,6 +35,17 @@ class LoginHandler(tornadoweb.TornadoHandler):
 
     def get(self, repository_path=None):
         self.render("login.html")
+
+    def post(self):
+        error_data = {'errors': {}}
+        request_data = escape.json_decode(self.request.body)
+        form = forms.SigninForm(request_data, handler=self)
+        if form.validate():
+            pass
+        else:
+            self.set_status(403)
+            error_data['errors'].update(form.errors)
+            self.write(error_data)
 
 
 class HomeHandler(tornadoweb.TornadoHandler):

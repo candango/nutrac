@@ -21,7 +21,7 @@ from firenado import service
 
 class LoginService(service.FirenadoService):
 
-    service.served_by("nutrac.services.UserService")
+    @service.served_by("nutrac.services.UserService")
     def is_valid(self, username, password):
         user = self.user_service.by_username(username)
         if user:
@@ -30,7 +30,10 @@ class LoginService(service.FirenadoService):
         return False
 
     def is_password_valid(self, challenge, encrypted_password):
-        return bcrypt.checkpw(challenge, encrypted_password)
+        return bcrypt.checkpw(
+            challenge.encode("utf-8"),
+            encrypted_password.encode("utf-8")
+        )
 
 
 class UserService(service.FirenadoService):

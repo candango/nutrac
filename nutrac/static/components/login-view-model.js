@@ -14,6 +14,8 @@ var stache = require("can-stache");
  */
 var LoginViewModel = DefineMap.extend("LoginModel", {
     isLoading: {type: "boolean", default: false},
+    hasError: {type: "boolean", default: false},
+    errorMessage: {type: "string", default: null},
     content: {type: "observable"},
     /**
      *
@@ -22,10 +24,10 @@ var LoginViewModel = DefineMap.extend("LoginModel", {
     connectedCallback: function(element) {
         console.log(element);
     },
-    getFormFields: function () {
+    getFormData: function () {
         var fields = {};
         $.each($("#form-signin").serializeArray(), function(i, field) {
-            fields[field.name] = field.value;
+            fields[field.name] = [field.value];
         });
         return fields;
     }
