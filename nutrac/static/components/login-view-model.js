@@ -15,7 +15,7 @@ var stache = require("can-stache");
 var LoginViewModel = DefineMap.extend("LoginModel", {
     isLoading: {type: "boolean", default: false},
     hasError: {type: "boolean", default: false},
-    errorMessage: {type: "string", default: null},
+    errorMessage: {type: "string", default: ""},
     content: {type: "observable"},
     /**
      *

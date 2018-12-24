@@ -17,16 +17,19 @@ Component.extend({
     ViewModel: LoginViewModel,
     events: {
         "#signinButton click": function (button, event) {
+            this.viewModel.hasError = false;
             ajax({
                 url: "/login",
                 type: "POST",
                 data: this.viewModel.getFormData(),
                 dataType: "json"
-            }).then(function(response){
+            }).then(function(response) {
                 console.log(response);
-            }).catch(function(error){
-                console.log(error)
-            });
+            }).catch(function(error) {
+                this.viewModel.set("errorMessage", "Error");
+                this.viewModel.set("hasError", true);
+                console.log(error);
+            }.bind(this));
         }
     },
     helpers: helpers
