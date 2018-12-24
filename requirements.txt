@@ -1,10 +1,10 @@
-bcrypt==3.1.4
-firenado[redis, sqlalchemy]==0.1.7.2
-jsonschema==2.5.1
+bcrypt==3.1.5
+firenado[redis, sqlalchemy]==0.1.7.6
+jsonschema==2.6.0
 passlib==1.7.1
 pexpect==4.6.0
-pycryptodome==3.6.6
-psycopg2-binary==2.7.5
+pycryptodome==3.7.2
+psycopg2-binary==2.7.6.1
 trac==1.2.3
 WTForms-Tornado==0.0.2
-WTForms-JSON == 0.3.3
+WTForms-JSON==0.3.3
