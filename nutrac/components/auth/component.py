@@ -14,26 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import (absolute_import, division, print_function,
+                        with_statement)
+
 from firenado import tornadoweb
+from . import handlers
 
 
-class IndexHandler(tornadoweb.TornadoHandler):
+class NutracAuthComponent(tornadoweb.TornadoComponent):
 
-    def get(self):
-        self.render("index.html")
-
-
-class ProfileHandler(tornadoweb.TornadoHandler):
-
-    def get(self):
-        self.write("Profile output")
+    def get_config_file(self):
+        return "auth"
 
 
-class HomeHandler(tornadoweb.TornadoHandler):
+class NutracAuthConfig(object):
 
-    def get(self, user):
-        """
-        :param basestring user:
-        :return:
-        """
-        self.write("Home output %s" % user)
+    def get_login_handler(self):
+        return handlers.LoginHandler
