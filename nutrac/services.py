@@ -21,6 +21,12 @@ from firenado import service
 
 class LoginService(service.FirenadoService):
 
+    user_service = None  # type: UserService
+
+    def __init__(self, consumer, data_source=None):
+        super(LoginService, self).__init__(consumer, data_source=None)
+        self.user_service = None
+
     @service.served_by("nutrac.services.UserService")
     def is_valid(self, username, password):
         user = self.user_service.by_username(username)
