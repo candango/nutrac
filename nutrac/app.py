@@ -60,6 +60,8 @@ class NutracComponent(tornadoweb.TornadoComponent):
             (r"/([\w|\-|\_|\@|]*\/?)", handlers.HomeHandler),
             (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/login",
              self.auth_config.get_login_handler()),
+            (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/prefs",
+             self.auth_config.get_login_handler()),
             (r"/([\w|\-|\_|\@|]*)/.*", wsgi.ComponentizedFallbackHandler,
              dict(component=self, fallback=container))
         ]
