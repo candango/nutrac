@@ -1,8 +1,7 @@
 bcrypt==3.1.5
-firenado[redis, sqlalchemy]==0.1.7.6
+firenado[pexpect, redis, sqlalchemy]==0.1.7.6
 jsonschema==2.6.0
 passlib==1.7.1
-pexpect==4.6.0
 pycryptodome==3.7.2
 psycopg2-binary==2.7.6.1
 trac==1.2.3
