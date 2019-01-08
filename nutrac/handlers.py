@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2019 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from firenado import tornadoweb
+from . import services
+from firenado import service, tornadoweb
+import os
+
+
+class TracdHandler:
+
+    @property
+    def trac_root(self):
+        return self.component.conf['trac']['root']
+
+    def path_exists(self, path):
+        return os.path.exists(self.trac_rooted(path))
+
+    def trac_rooted(self, path):
+        return os.path.join(self.trac_root, path)
 
 
 class IndexHandler(tornadoweb.TornadoHandler):
@@ -29,11 +44,19 @@ class ProfileHandler(tornadoweb.TornadoHandler):
         self.write("Profile output")
 
 
-class HomeHandler(tornadoweb.TornadoHandler):
+class HomeHandler(tornadoweb.TornadoHandler, TracdHandler):
 
-    def get(self, user):
+    @service.served_by(services.ProjectService)
+    def get(self, path):
         """
-        :param basestring user:
+        :param basestring path:
         :return:
         """
-        self.write("Home output %s" % user)
+        if self.path_exists(path):
+            repos = self.project_service.get_projects(
+                self.trac_rooted(path)
+            )
+            for repo in repos:
+                self.write("%s</br>" % repo)
+        else:
+            self.set_status(404, "Path no found.")

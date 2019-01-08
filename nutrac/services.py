@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2019 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,20 @@
 from .models import UserBase
 import bcrypt
 from firenado import service
+import os
+
+
+class ProjectService(service.FirenadoService):
+
+    def get_projects(self, path):
+        repos = []
+        for dirname in os.listdir(path):
+            if os.path.isdir(os.path.join(path, dirname)):
+                repos.append(dirname)
+        return repos
+
+    def is_valid(self, path):
+        return False
 
 
 class LoginService(service.FirenadoService):
