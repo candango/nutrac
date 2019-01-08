@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2019 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,19 +24,22 @@ import tornado.wsgi
 import os
 import trac.web.main
 import pexpect
-import nutrac.services
+from nutrac import services
 
 
 class NutracWsgiApplication(DataConnectedMixin):
 
-    user_service = None  # type: nutrac.services.UserService
+    repository_service = None  # type: services.ProjectService
+    user_service = None  # type: services.UserService
 
     def __init__(self, component):
+        self.repository_service = None
         self.user_service = None
         self.component = component
         self.data_connected = self.component.application
 
-    @service.served_by(nutrac.services.UserService)
+    @service.served_by(services.ProjectService)
+    @service.served_by(services.UserService)
     def process(self, environ, start_response, handler, request):
         """ Process the user state and environment variables necessary to
         dispatch the request correctly to the trac instance being requested.
@@ -52,7 +55,7 @@ class NutracWsgiApplication(DataConnectedMixin):
         user = None
         trac_root = self.component.conf['trac']['root']
         project_relative = "/".join(request.uri.split("/")[1:3])
-        project_path = os.path.join(trac_root, project_relative)
+        project_path = os.path.join(trac_root, project_relative, "trac")
         os.environ['TRAC_ENV'] = project_path
         environ['PATH_INFO'] = environ['PATH_INFO'].replace(
             "/%s" % project_relative, "")
@@ -60,6 +63,7 @@ class NutracWsgiApplication(DataConnectedMixin):
             environ['REMOTE_USER'] = user.username
         else:
             environ['REMOTE_USER'] = "anonymous"
+
         print(project_relative)
 
         if self.component.project_exists(project_relative):
