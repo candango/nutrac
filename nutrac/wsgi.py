@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2019 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,24 +24,38 @@ import tornado.wsgi
 import os
 import trac.web.main
 import pexpect
+from nutrac import services
 
 
 class NutracWsgiApplication(DataConnectedMixin):
 
+    repository_service = None  # type: services.ProjectService
+    user_service = None  # type: services.UserService
+
     def __init__(self, component):
-        """
+        self.repository_service = None
+        self.user_service = None
+        self.component = component
+        self.data_connected = self.component.application
 
-        :param nutrac.app.NutracComponent component:
-        """
-        self.data_connected = component.application
+    @service.served_by(services.ProjectService)
+    @service.served_by(services.UserService)
+    def process(self, environ, start_response, handler, request):
+        """ Process the user state and environment variables necessary to
+        dispatch the request correctly to the trac instance being requested.
 
-    @service.served_by("nutrac.services.UserService")
-    def process(self, environ, start_response, component, handler, request):
+        :param environ: Environment variables to be sent to the trac
+        :param start_response:
+        :param ComponentizedFallbackHandler handler: The
+        ComponentizedFallbackHandler triggering the process method
+        :param request: The real Tornado request
+        :return: The dispatched request returned from trac
+        """
         #user = self.user_service.by_username("nutracmin")
         user = None
-        trac_root = component.conf['trac']['root']
+        trac_root = self.component.conf['trac']['root']
         project_relative = "/".join(request.uri.split("/")[1:3])
-        project_path = os.path.join(trac_root, project_relative)
+        project_path = os.path.join(trac_root, project_relative, "trac")
         os.environ['TRAC_ENV'] = project_path
         environ['PATH_INFO'] = environ['PATH_INFO'].replace(
             "/%s" % project_relative, "")
@@ -49,9 +63,10 @@ class NutracWsgiApplication(DataConnectedMixin):
             environ['REMOTE_USER'] = user.username
         else:
             environ['REMOTE_USER'] = "anonymous"
+
         print(project_relative)
 
-        if component.project_exists(project_relative):
+        if self.component.project_exists(project_relative):
             if user:
                 if user.email:
                     command = "trac-admin %s session set email %s %s" % (
@@ -66,7 +81,7 @@ class NutracWsgiApplication(DataConnectedMixin):
 
             environ['SCRIPT_NAME'] = "/%s/" % project_relative
 
-            request.application = component.application
+            request.application = self.component.application
             #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
             #environ['trac.base_path'] = 'candango'
             #if 'HTTP_AUTHORIZATION' in environ:
@@ -98,11 +113,10 @@ class ComponentizedFallbackHandler(tornado.web.FallbackHandler):
         # self.component.run_after_handler(self)
 
 
-class ComponentizedWSGIContainer(tornado.wsgi.WSGIContainer):
+class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
 
-    def __init__(self, wsgi_application, component):
-        super(ComponentizedWSGIContainer, self).__init__(wsgi_application)
-        self.component = component
+    def __init__(self, wsgi_application):
+        super(ContextualizedWSGIContainer, self).__init__(wsgi_application)
         self.handler = None
 
     def __call__(self, request):
@@ -114,8 +128,8 @@ class ComponentizedWSGIContainer(tornado.wsgi.WSGIContainer):
             data["headers"] = response_headers
             return response.append
         app_response = self.wsgi_application(
-            ComponentizedWSGIContainer.environ(request), start_response,
-            self.component, self.handler, request)
+            ContextualizedWSGIContainer.environ(request), start_response,
+            self.handler, request)
         self.handler = None
         try:
             response.extend(app_response)

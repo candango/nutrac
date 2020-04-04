@@ -1,7 +1,9 @@
-bcrypt==3.1.4
-firenado[redis, sqlalchemy]==0.1.7.2
-trac==1.2.3
-passlib==1.7.1
-pexpect==4.6.0
-pycryptodome==3.6.6
-psycopg2-binary==2.7.5
+bcrypt==3.1.7
+firenado[all]==0.1.8.1
+jsonschema==3.2.0
+passlib==1.7.2
+pycryptodome==3.9.7
+psycopg2-binary==2.8.4
+trac==1.4.1
+WTForms-Tornado==0.0.2
+WTForms-JSON==0.3.3

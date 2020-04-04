@@ -6,10 +6,23 @@ GRANT ALL ON SCHEMA public TO <NUTRAC_USER>;
 
 DROP TABLE IF EXISTS profile;
 DROP TABLE IF EXISTS nuser;
+DROP SEQUENCE IF EXISTS instance_id_seq;
 DROP SEQUENCE IF EXISTS nuser_id_seq;
+
+CREATE SEQUENCE instance_id_seq;
+GRANT ALL ON SEQUENCE instance_id_seq TO <NUTRAC_USER>;
 
 CREATE SEQUENCE nuser_id_seq;
 GRANT ALL ON SEQUENCE nuser_id_seq TO <NUTRAC_USER>;
+
+
+CREATE TABLE instance(
+  id                          BIGINT NOT NULL DEFAULT
+    nextval('instance_id_seq'::regclass),
+  uuid                        UUID NOT NULL,
+);
+
+GRANT ALL ON TABLE instance TO <NUTRAC_USER>;
 
 
 -- ## User table ##

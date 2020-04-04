@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2019 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,31 @@
 from .models import UserBase
 import bcrypt
 from firenado import service
+import os
+
+
+class ProjectService(service.FirenadoService):
+
+    def get_projects(self, path):
+        repos = []
+        for dirname in os.listdir(path):
+            if os.path.isdir(os.path.join(path, dirname)):
+                repos.append(dirname)
+        return repos
+
+    def is_valid(self, path):
+        return False
 
 
 class LoginService(service.FirenadoService):
 
-    service.served_by("nutrac.services.UserService")
+    user_service = None  # type: UserService
+
+    def __init__(self, consumer, data_source=None):
+        super(LoginService, self).__init__(consumer, data_source=None)
+        self.user_service = None
+
+    @service.served_by("nutrac.services.UserService")
     def is_valid(self, username, password):
         user = self.user_service.by_username(username)
         if user:
@@ -30,7 +50,10 @@ class LoginService(service.FirenadoService):
         return False
 
     def is_password_valid(self, challenge, encrypted_password):
-        return bcrypt.checkpw(challenge, encrypted_password)
+        return bcrypt.checkpw(
+            challenge.encode("utf-8"),
+            encrypted_password.encode("utf-8")
+        )
 
 
 class UserService(service.FirenadoService):

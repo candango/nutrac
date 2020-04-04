@@ -1,3 +1,6 @@
+id: "--add-id-here--"
+auth:
+  config: "nutrac.components.NutracAuthConfig"
 password:
   pepper: "--add-pepper-here--"
 trac:

@@ -49,5 +49,6 @@ nosetests.xml
 firenado.yml
 nutrac.yml
 
-#NodeJs
+#NodeJs / Yarn
 node_modules
+yarn.lock
