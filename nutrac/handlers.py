@@ -17,6 +17,10 @@
 from . import services
 from firenado import service, tornadoweb
 import os
+import pexpect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TracdHandler:
@@ -60,3 +64,36 @@ class HomeHandler(tornadoweb.TornadoHandler, TracdHandler):
                 self.write("%s</br>" % repo)
         else:
             self.set_status(404, "Path no found.")
+
+
+class UpgradeHandler(tornadoweb.TornadoHandler, TracdHandler):
+
+    @service.served_by(services.ProjectService)
+    def get(self, repository_path=None):
+        real_repository_path = self.trac_rooted(repository_path)
+        upgrade_cmd = "trac-admin %s upgrade"
+        wiki_upgrade_cmd = "trac-admin %s wiki upgrade"
+        logger.warn("Upgrading repository %s" % repository_path)
+        if self.path_exists(real_repository_path):
+            try:
+                child = pexpect.spawn(upgrade_cmd % real_repository_path)
+                child.expect(pexpect.EOF)
+            except pexpect.ExceptionPexpect as ep:
+                self.write(str(ep))
+                self.render("nutrac:upgrade.html")
+            else:
+                if "Error" in child.before:
+                    self.write(child.before)
+                    self.render("nutrac:upgrade.html")
+                else:
+                    logger.warn("Repository %s was upgraded." %
+                                repository_path)
+                    logger.warn("Upgrading repository %s wiki." %
+                                 repository_path)
+                    # TODO: handle wiki upgrade exception
+                    child = pexpect.spawn(wiki_upgrade_cmd %
+                                          real_repository_path)
+                    child.expect(pexpect.EOF)
+                    logger.warn("Repository %s wiki was upgraded." %
+                                repository_path)
+                    self.redirect("/%s" % repository_path)

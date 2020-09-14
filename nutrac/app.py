@@ -48,7 +48,8 @@ class NutracComponent(tornadoweb.TornadoComponent):
             logger.info("Nutrac instance id is %s." % self.id)
 
         container = wsgi.ContextualizedWSGIContainer(
-            self.wsgi_application.process
+            self.wsgi_application.process,
+            self
         )
         self.auth_config = get_class_from_name(
             self.conf['auth']['config']
@@ -60,8 +61,10 @@ class NutracComponent(tornadoweb.TornadoComponent):
             (r"/([\w|\-|\_|\@|]*\/?)", handlers.HomeHandler),
             (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/login",
              self.auth_config.get_login_handler()),
-            (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/prefs",
-             self.auth_config.get_login_handler()),
+            # (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/prefs",
+            #  self.auth_config.get_login_handler()),
+            (r"/([\w|\-|\_|\@|]*/[\w|\-|\_|\@|]*)/upgrade",
+             handlers.UpgradeHandler),
             (r"/([\w|\-|\_|\@|]*)/.*", wsgi.ComponentizedFallbackHandler,
              dict(component=self, fallback=container))
         ]

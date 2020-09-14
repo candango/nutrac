@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018-2019 Flavio Garcia
+# Copyright 2018-2020 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,15 @@ from __future__ import (absolute_import, division, print_function,
 from firenado import service, session
 from firenado.data import DataConnectedMixin
 from tornado import escape, httputil
+import tornado.web
 import tornado.wsgi
 import os
 import trac.web.main
 import pexpect
 from nutrac import services
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NutracWsgiApplication(DataConnectedMixin):
@@ -55,7 +59,7 @@ class NutracWsgiApplication(DataConnectedMixin):
         user = None
         trac_root = self.component.conf['trac']['root']
         project_relative = "/".join(request.uri.split("/")[1:3])
-        project_path = os.path.join(trac_root, project_relative, "trac")
+        project_path = os.path.join(trac_root, project_relative)
         os.environ['TRAC_ENV'] = project_path
         environ['PATH_INFO'] = environ['PATH_INFO'].replace(
             "/%s" % project_relative, "")
@@ -63,8 +67,6 @@ class NutracWsgiApplication(DataConnectedMixin):
             environ['REMOTE_USER'] = user.username
         else:
             environ['REMOTE_USER'] = "anonymous"
-
-        print(project_relative)
 
         if self.component.project_exists(project_relative):
             if user:
@@ -78,9 +80,7 @@ class NutracWsgiApplication(DataConnectedMixin):
                 child = pexpect.spawn(command)
                 child.expect(pexpect.EOF)
                 print(child.before)
-
             environ['SCRIPT_NAME'] = "/%s/" % project_relative
-
             request.application = self.component.application
             #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
             #environ['trac.base_path'] = 'candango'
@@ -88,7 +88,8 @@ class NutracWsgiApplication(DataConnectedMixin):
                 #auth_header = environ['HTTP_AUTHORIZATION']
                 #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
             #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
-            return trac.web.main.dispatch_request(environ, start_response)
+            response = trac.web.main.dispatch_request(environ, start_response)
+            return response
         else:
             status = "404 Not Found"
             response_headers = [("Content-type", "text/plain")]
@@ -115,9 +116,9 @@ class ComponentizedFallbackHandler(tornado.web.FallbackHandler):
 
 class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
 
-    def __init__(self, wsgi_application):
+    def __init__(self, wsgi_application, component):
         super(ContextualizedWSGIContainer, self).__init__(wsgi_application)
-        self.handler = None
+        self.component = component
 
     def __call__(self, request):
         data = {}
@@ -139,25 +140,37 @@ class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
                 app_response.close()
         if not data:
             raise Exception("WSGI app did not call start_response")
-
         status_code, reason = data["status"].split(' ', 1)
         status_code = int(status_code)
-        headers = data["headers"]
-        header_set = set(k.lower() for (k, v) in headers)
-        body = escape.utf8(body)
-        if status_code != 304:
-            if "content-length" not in header_set:
-                headers.append(("Content-Length", str(len(body))))
-            if "content-type" not in header_set:
-                headers.append(("Content-Type", "text/html; charset=UTF-8"))
-        if "server" not in header_set:
-            headers.append(("Server", "TornadoServer/%s" % tornado.version))
-
-        start_line = httputil.ResponseStartLine("HTTP/1.1", status_code,
-                                                reason)
-        header_obj = httputil.HTTPHeaders()
-        for key, value in headers:
-            header_obj.add(key, value)
-        request.connection.write_headers(start_line, header_obj, chunk=body)
-        request.connection.finish()
-        self._log(status_code, request)
+        if status_code == 500:
+            if "upgrade" in body:
+                logger.warn("It is necessary to upgrade the repository %s" %
+                            request.uri)
+                upgrade_uri = "%s/upgrade" % request.uri
+                handler_delegator = (
+                    self.component.application.get_handler_delegate(
+                        request,
+                        tornado.web.RedirectHandler,
+                        {'url': upgrade_uri}
+                    )
+                )
+                handler_delegator.finish()
+        else:
+            headers = data["headers"]
+            header_set = set(k.lower() for (k, v) in headers)
+            body = escape.utf8(body)
+            if status_code != 304:
+                if "content-length" not in header_set:
+                    headers.append(("Content-Length", str(len(body))))
+                if "content-type" not in header_set:
+                    headers.append(("Content-Type", "text/html; charset=UTF-8"))
+            if "server" not in header_set:
+                headers.append(("Server", "TornadoServer/%s" % tornado.version))
+            start_line = httputil.ResponseStartLine("HTTP/1.1", status_code,
+                                                    reason)
+            header_obj = httputil.HTTPHeaders()
+            for key, value in headers:
+                header_obj.add(key, value)
+            request.connection.write_headers(start_line, header_obj, chunk=body)
+            request.connection.finish()
+            self._log(status_code, request)
