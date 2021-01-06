@@ -8,9 +8,9 @@
   "license": "Apache-2.0",
   "private": false,
   "dependencies": {
-    "bootstrap": "4.5.2",
-    "can": "6.6.0",
-    "faz": "0.0.14",
+    "bootstrap": "4.5.3",
+    "can": "6.6.1",
+    "faz": "0.0.18",
     "jquery": "3.5.0",
     "less": "3.12.2",
     "popper.js": "1.16.1"
