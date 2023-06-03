@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2018-2020 Flavio Garcia
+# Copyright 2018-2023 Flávio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import trac.web.main
 import pexpect
 from nutrac import services
 import logging
+# import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -55,11 +56,14 @@ class NutracWsgiApplication(DataConnectedMixin):
         :param request: The real Tornado request
         :return: The dispatched request returned from trac
         """
-        #user = self.user_service.by_username("nutracmin")
+        # user = self.user_service.by_username("nutracmin")
         user = None
         trac_root = self.component.conf['trac']['root']
         project_relative = "/".join(request.uri.split("/")[1:3])
         project_path = os.path.join(trac_root, project_relative)
+        # FROM: https://trac.edgewall.org/browser/trunk/trac/env.py#L690
+        # project_id = hashlib.sha1(project_path.encode("utf-8")).hexdigest()
+        # print(project_id)
         os.environ['TRAC_ENV'] = project_path
         environ['PATH_INFO'] = environ['PATH_INFO'].replace(
             "/%s" % project_relative, "")
@@ -82,12 +86,14 @@ class NutracWsgiApplication(DataConnectedMixin):
                 print(child.before)
             environ['SCRIPT_NAME'] = "/%s/" % project_relative
             request.application = self.component.application
-            #environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
-            #environ['trac.base_path'] = 'candango'
-            #if 'HTTP_AUTHORIZATION' in environ:
-                #auth_header = environ['HTTP_AUTHORIZATION']
-                #environ['REMOTE_USER'] = base64.decodestring(auth_header[6:]).split(':')[0]
-            #environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
+            # environ['trac.env_path'] = os.path.join(PROJECT_ROOT, '..', '..')
+            # environ['trac.base_path'] = 'candango'
+            # if 'HTTP_AUTHORIZATION' in environ:
+            #   auth_header = environ['HTTP_AUTHORIZATION']
+            #   environ['REMOTE_USER'] = base64.decodestring(
+            #       auth_header[6:]).split(':')[0]
+            # environ['SCRIPT_NAME'] = os.path.join('/', sys.argv[1])
+            # print(environ)
             response = trac.web.main.dispatch_request(environ, start_response)
             return response
         else:
@@ -123,7 +129,6 @@ class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
     def __call__(self, request):
         data = {}
         response = []
-
         def start_response(status, response_headers, exc_info=None):
             data["status"] = status
             data["headers"] = response_headers
