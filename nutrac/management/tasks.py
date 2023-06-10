@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2018 Flavio Garcia
+# Copyright 2018-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +16,11 @@ from ..models import UserBase
 from ..security import generate_private_key
 from passlib.hash import bcrypt
 from firenado.management import ManagementTask
-from firenado.util.sqlalchemy_util import Session, run_script
+from firenado.sqlalchemy import run_script
 import logging
 import os
-from six import moves
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 import uuid
 
 
@@ -41,17 +39,14 @@ class NutacCreateDatabaseTask(ManagementTask):
     def run(self, namespace):
         """ Create the database
         """
-        password = None
+        password = namespace.password
         if namespace.password is None:
-            password = moves.input("Inform the database password:")
-        else:
-            password = namespace.password
-        print(namespace)
+            password = input("Inform the database password:")
 
         conn_string = "%s://%s:%s@%s:%s/%s" % (
             "postgresql+psycopg2",
             namespace.user,
-            namespace.password,
+            password,
             namespace.host,
             namespace.port,
             namespace.database
@@ -60,33 +55,31 @@ class NutacCreateDatabaseTask(ManagementTask):
         engine = create_engine(conn_string)
 
         engine.connect()
-
+        Session = sessionmaker()
         Session.configure(bind=engine)
-        session = Session()
-
-        db_script_path = os.path.realpath(
-            os.path.join(
-                os.path.dirname(__file__),
-                "..",
-                "scripts",
-                "pgsql",
-                "public.sql"
+        with Session() as session:
+            db_script_path = os.path.realpath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "scripts",
+                    "pgsql",
+                    "public.sql"
+                )
             )
-        )
 
-        def fix_command(sql_command):
-            return sql_command.replace("<NUTRAC_USER>", namespace.user)
+            def fix_command(sql_command):
+                return sql_command.replace("<NUTRAC_USER>", namespace.user)
 
-        run_script(db_script_path, session, handle_command=fix_command)
+            run_script(db_script_path, session, handle_command=fix_command)
 
-        user = UserBase()
-        user.uuid = str(uuid.uuid5(uuid.NAMESPACE_URL, "http://localhost"))
-        user.username = "nutracmin"
-        user.password = bcrypt.encrypt("nutracpass")
-        user.private_key = generate_private_key()
+            user = UserBase()
+            user.uuid = str(uuid.uuid5(uuid.NAMESPACE_URL, "http://localhost"))
+            user.username = "nutracmin"
+            user.password = bcrypt.encrypt("nutracpass")
+            user.private_key = generate_private_key()
 
-        session.add(user)
-        session.commit()
-        session.close()
+            session.add(user)
+            session.commit()
 
-        logger.info("Creating the NuTrac database.")
+            logger.info("Creating the NuTrac database.")

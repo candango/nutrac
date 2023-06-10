@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2018-2019 Flavio Garcia
+# Copyright 2018-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import services
-from firenado import service, tornadoweb
+from .services import ProjectService
+from firenado.service import with_service
+from firenado.tornadoweb import TornadoHandler
 import os
 import pexpect
 import logging
@@ -36,21 +35,21 @@ class TracdHandler:
         return os.path.join(self.trac_root, path)
 
 
-class IndexHandler(tornadoweb.TornadoHandler):
+class IndexHandler(TornadoHandler):
 
     def get(self):
         self.render("index.html")
 
 
-class ProfileHandler(tornadoweb.TornadoHandler):
+class ProfileHandler(TornadoHandler):
 
     def get(self):
         self.write("Profile output")
 
 
-class HomeHandler(tornadoweb.TornadoHandler, TracdHandler):
+class HomeHandler(TornadoHandler, TracdHandler):
 
-    @service.served_by(services.ProjectService)
+    @with_service(ProjectService)
     def get(self, path):
         """
         :param basestring path:
@@ -66,9 +65,11 @@ class HomeHandler(tornadoweb.TornadoHandler, TracdHandler):
             self.set_status(404, "Path no found.")
 
 
-class UpgradeHandler(tornadoweb.TornadoHandler, TracdHandler):
+class UpgradeHandler(TornadoHandler, TracdHandler):
 
-    @service.served_by(services.ProjectService)
+    project_service: ProjectService
+
+    @with_service(ProjectService)
     def get(self, repository_path=None):
         real_repository_path = self.trac_rooted(repository_path)
         upgrade_cmd = "trac-admin %s upgrade"
@@ -89,7 +90,7 @@ class UpgradeHandler(tornadoweb.TornadoHandler, TracdHandler):
                     logger.warn("Repository %s was upgraded." %
                                 repository_path)
                     logger.warn("Upgrading repository %s wiki." %
-                                 repository_path)
+                                repository_path)
                     # TODO: handle wiki upgrade exception
                     child = pexpect.spawn(wiki_upgrade_cmd %
                                           real_repository_path)

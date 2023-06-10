@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2018-2023 Flávio Gonçalves Garcia
+# Copyright 2018-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import (absolute_import, division, print_function,
-                        with_statement)
-
-from firenado import service, session
+from .services import ProjectService, UserService
+from firenado import session
+from firenado.service import with_service
 from firenado.data import DataConnectedMixin
+import logging
+import os
+import pexpect
 from tornado import escape, httputil
 import tornado.web
 import tornado.wsgi
-import os
 import trac.web.main
-import pexpect
-from nutrac import services
-import logging
 # import hashlib
 
 logger = logging.getLogger(__name__)
@@ -34,8 +30,8 @@ logger = logging.getLogger(__name__)
 
 class NutracWsgiApplication(DataConnectedMixin):
 
-    repository_service = None  # type: services.ProjectService
-    user_service = None  # type: services.UserService
+    repository_service: ProjectService
+    user_service: UserService
 
     def __init__(self, component):
         self.repository_service = None
@@ -43,8 +39,8 @@ class NutracWsgiApplication(DataConnectedMixin):
         self.component = component
         self.data_connected = self.component.application
 
-    @service.served_by(services.ProjectService)
-    @service.served_by(services.UserService)
+    @with_service(ProjectService)
+    @with_service(UserService)
     def process(self, environ, start_response, handler, request):
         """ Process the user state and environment variables necessary to
         dispatch the request correctly to the trac instance being requested.
@@ -71,7 +67,7 @@ class NutracWsgiApplication(DataConnectedMixin):
             environ['REMOTE_USER'] = user.username
         else:
             environ['REMOTE_USER'] = "anonymous"
-
+        environ['REMOTE_USER'] = "piraz"
         if self.component.project_exists(project_relative):
             if user:
                 if user.email:
@@ -108,33 +104,33 @@ class ComponentizedFallbackHandler(tornado.web.FallbackHandler):
     def initialize(self, component, fallback):
         self.component = component
         fallback.handler = self
-        super(ComponentizedFallbackHandler, self).initialize(fallback)
+        super().initialize(fallback)
 
     @session.read
     def prepare(self):
-        super(ComponentizedFallbackHandler, self).prepare()
+        super().prepare()
 
     @session.write
     def on_finish(self):
         pass
-        # self.component.run_after_handler(self)
 
 
 class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
 
     def __init__(self, wsgi_application, component):
-        super(ContextualizedWSGIContainer, self).__init__(wsgi_application)
+        super().__init__(wsgi_application)
         self.component = component
 
     def __call__(self, request):
         data = {}
         response = []
+
         def start_response(status, response_headers, exc_info=None):
-            data["status"] = status
-            data["headers"] = response_headers
+            data['status'] = status
+            data['headers'] = response_headers
             return response.append
         app_response = self.wsgi_application(
-            ContextualizedWSGIContainer.environ(request), start_response,
+            self.environ(request), start_response,
             self.handler, request)
         self.handler = None
         try:
@@ -145,7 +141,7 @@ class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
                 app_response.close()
         if not data:
             raise Exception("WSGI app did not call start_response")
-        status_code, reason = data["status"].split(' ', 1)
+        status_code, reason = data['status'].split(" ", 1)
         status_code = int(status_code)
         if status_code == 500:
             if "upgrade" in body:
@@ -161,21 +157,24 @@ class ContextualizedWSGIContainer(tornado.wsgi.WSGIContainer):
                 )
                 handler_delegator.finish()
         else:
-            headers = data["headers"]
+            headers = data['headers']
             header_set = set(k.lower() for (k, v) in headers)
             body = escape.utf8(body)
             if status_code != 304:
                 if "content-length" not in header_set:
                     headers.append(("Content-Length", str(len(body))))
                 if "content-type" not in header_set:
-                    headers.append(("Content-Type", "text/html; charset=UTF-8"))
+                    headers.append(
+                            ("Content-Type", "text/html; charset=UTF-8"))
             if "server" not in header_set:
-                headers.append(("Server", "TornadoServer/%s" % tornado.version))
+                headers.append(
+                        ("Server", "TornadoServer/%s" % tornado.version))
             start_line = httputil.ResponseStartLine("HTTP/1.1", status_code,
                                                     reason)
             header_obj = httputil.HTTPHeaders()
             for key, value in headers:
                 header_obj.add(key, value)
-            request.connection.write_headers(start_line, header_obj, chunk=body)
+            request.connection.write_headers(
+                    start_line, header_obj, chunk=body)
             request.connection.finish()
             self._log(status_code, request)

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-#
-# Copyright 2018-2019 Flavio Garcia
+# Copyright 2018-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +14,14 @@
 
 from .models import UserBase
 import bcrypt
-from firenado import service
+from firenado.service import FirenadoService, with_service
+from firenado.sqlalchemy import with_session
+from sqlalchemy import select
 import os
+from sqlalchemy.orm import Session
 
 
-class ProjectService(service.FirenadoService):
+class ProjectService(FirenadoService):
 
     def get_projects(self, path):
         repos = []
@@ -33,7 +34,7 @@ class ProjectService(service.FirenadoService):
         return False
 
 
-class LoginService(service.FirenadoService):
+class LoginService(FirenadoService):
 
     user_service = None  # type: UserService
 
@@ -41,7 +42,7 @@ class LoginService(service.FirenadoService):
         super(LoginService, self).__init__(consumer, data_source=None)
         self.user_service = None
 
-    @service.served_by("nutrac.services.UserService")
+    @with_service("nutrac.services.UserService")
     def is_valid(self, username, password):
         user = self.user_service.by_username(username)
         if user:
@@ -56,11 +57,11 @@ class LoginService(service.FirenadoService):
         )
 
 
-class UserService(service.FirenadoService):
+class UserService(FirenadoService):
 
-    def by_username(self, username):
-        db_session = self.get_data_source("nutrac").session
-        user = db_session.query(UserBase).filter(
-            UserBase.username == username.lower()).one_or_none()
-        db_session.close()
+    @with_session(data_source="nutrac")
+    def by_username(self, username, **kwargs):
+        session: Session = kwargs.get("session")
+        stmt = select(UserBase).where(UserBase.username == username.lower())
+        user = session.scalars(stmt).one_or_none()
         return user
