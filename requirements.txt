@@ -3,7 +3,7 @@ firenado[all]==0.2.3
 jsonschema==3.2.0
 passlib==1.7.4
 pycryptodome==3.10.1
-psycopg2-binary==2.8.6
-trac==1.4.3
-WTForms-Tornado==0.0.2
+psycopg2==2.9.6
+trac@https://github.com/edgewall/trac/archive/refs/tags/trac-1.5.4.zip
+Tornado-WTForms==0.0.1
 WTForms-JSON==0.3.3
