@@ -2,7 +2,7 @@ bcrypt==3.1.7
 firenado[all]==0.9.0
 jsonschema==3.2.0
 passlib==1.7.4
-pycryptodome==3.10.1
+pycryptodome==3.19.1
 psycopg2==2.9.6
 trac@https://github.com/edgewall/trac/archive/refs/tags/trac-1.5.4.zip
 Tornado-WTForms==0.0.1
